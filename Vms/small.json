@@ -2,13 +2,19 @@
     "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-        "vmName": {
+        "vmName1": {
             "type": "string",
             "metadata": {
                 "description": "VM Name"
             }
         },
-        "customUri": {
+        "vmName2": {
+          "type": "string",
+          "metadata": {
+              "description": "VM Name 2"
+          }
+      },
+      "customUri": {
             "type": "string",
             "metadata": {
                 "description": "Uri for SAP Bits"
@@ -75,19 +81,37 @@
                 "description": "IP Allocation Method"
           }
         },
-        "StaticIP": {
+        "StaticIP1": {
           "type": "string",
           "metadata": {
             "description": "IP Address for the HANA VM when Static IP Allocation Method has been selected"
           },
           "defaultValue": "10.0.5.4"
-        }
+        },
+        "StaticIP2": {
+          "type": "string",
+          "metadata": {
+            "description": "IP Address for the other HANA VM when Static IP Allocation Method has been selected"
+          },
+          "defaultValue": "10.0.5.5"
+        },
+        "HSRINST": {
+          "type": "string",
+          "metadata": {
+            "description": "Should we configure HSR for the VM"
+          },
+          "defaultValue": "no",
+          "allowedValues": [
+            "yes",
+            "no"
+        ]
+        }                
     },
     "variables": {
         "api-version": "2017-06-01",
         "api-version-vm": "2017-03-30",
         "mode": "Push",
-        "nicName": "[if (equals(parameters('IPAllocationMethod'),'Static'), concat(parameters('vmName'),'-static'), concat(parameters('vmName'),'-dynamic'))]",
+        "nicName": "[if (equals(parameters('IPAllocationMethod'),'Static'), concat(parameters('vmName1'),'-static'), concat(parameters('vmName1'),'-dynamic'))]",
         "subnetRef": "[parameters('HANASubnetRef')]",
         "OperatingSystemSpec":{
             "imagePublisher":"[if (contains(parameters('OperatingSystem'),'SLES'),'SUSE','RedHat')]",
@@ -129,7 +153,7 @@
       "condition": "[equals(parameters('IPAllocationMethod'), 'Dynamic')]",
       "apiVersion": "[variables('api-version')]",
       "type": "Microsoft.Network/networkInterfaces",
-      "name": "[concat(parameters('vmName'),'-dynamic')]",
+      "name": "[concat(parameters('vmName1'),'-dynamic')]",
       "location": "[resourceGroup().location]",
       "properties": {
         "ipConfigurations": [
@@ -149,7 +173,7 @@
       "condition": "[equals(parameters('IPAllocationMethod'), 'Static')]",
       "apiVersion": "[variables('api-version')]",
       "type": "Microsoft.Network/networkInterfaces",
-      "name": "[concat(parameters('vmName'),'-static')]",
+      "name": "[concat(parameters('vmName1'),'-static')]",
       "location": "[resourceGroup().location]",
       "properties": {
         "ipConfigurations": [
@@ -157,7 +181,7 @@
             "name": "ipconfig1",
             "properties": {
               "privateIPAllocationMethod": "Static",
-              "privateIPAddress": "[parameters('StaticIP')]",
+              "privateIPAddress": "[parameters('StaticIP1')]",
               "subnet": {
                 "id": "[variables('subnetRef')]"
               }
@@ -168,7 +192,7 @@
     },
     {
       "type": "Microsoft.Compute/disks",
-      "name": "[concat(parameters('vmName'),'-shared')]",
+      "name": "[concat(parameters('vmName1'),'-shared')]",
       "apiVersion": "[variables('api-version-vm')]",
       "location": "[resourceGroup().location]",
       "sku": {
@@ -184,7 +208,7 @@
     },
     {
       "type": "Microsoft.Compute/disks",
-      "name": "[concat(parameters('vmName'),'-sap')]",
+      "name": "[concat(parameters('vmName1'),'-sap')]",
       "apiVersion": "[variables('api-version-vm')]",
       "location": "[resourceGroup().location]",
       "sku": {
@@ -200,7 +224,7 @@
     },
     {
       "type": "Microsoft.Compute/disks",
-      "name": "[concat(parameters('vmName'),'-backup1')]",
+      "name": "[concat(parameters('vmName1'),'-backup1')]",
       "apiVersion": "[variables('api-version-vm')]",
       "location": "[resourceGroup().location]",
       "sku": {
@@ -216,7 +240,7 @@
     },
     {
       "type": "Microsoft.Compute/disks",
-      "name": "[concat(parameters('vmName'),'-data1')]",
+      "name": "[concat(parameters('vmName1'),'-data1')]",
       "apiVersion": "[variables('api-version-vm')]",
       "location": "[resourceGroup().location]",
       "sku": {
@@ -232,7 +256,7 @@
     },
     {
       "type": "Microsoft.Compute/disks",
-      "name": "[concat(parameters('vmName'),'-data2')]",
+      "name": "[concat(parameters('vmName1'),'-data2')]",
       "apiVersion": "[variables('api-version-vm')]",
       "location": "[resourceGroup().location]",
       "sku": {
@@ -249,22 +273,22 @@
     {
       "apiVersion": "[variables('api-version-vm')]",
       "type": "Microsoft.Compute/virtualMachines",
-      "name": "[parameters('vmName')]",
+      "name": "[parameters('vmName1')]",
       "location": "[resourceGroup().location]",
       "dependsOn": [
         "[resourceId('Microsoft.Network/networkInterfaces',variables('nicName'))]",
-        "[resourceId('Microsoft.Compute/disks/', concat(parameters('vmName'),'-shared'))]",
-        "[resourceId('Microsoft.Compute/disks/', concat(parameters('vmName'),'-sap'))]",
-        "[resourceId('Microsoft.Compute/disks/', concat(parameters('vmName'),'-backup1'))]",
-        "[resourceId('Microsoft.Compute/disks/', concat(parameters('vmName'),'-data1'))]",
-        "[resourceId('Microsoft.Compute/disks/', concat(parameters('vmName'),'-data2'))]"
+        "[resourceId('Microsoft.Compute/disks/', concat(parameters('vmName1'),'-shared'))]",
+        "[resourceId('Microsoft.Compute/disks/', concat(parameters('vmName1'),'-sap'))]",
+        "[resourceId('Microsoft.Compute/disks/', concat(parameters('vmName1'),'-backup1'))]",
+        "[resourceId('Microsoft.Compute/disks/', concat(parameters('vmName1'),'-data1'))]",
+        "[resourceId('Microsoft.Compute/disks/', concat(parameters('vmName1'),'-data2'))]"
       ],
       "properties": {
         "hardwareProfile": {
           "vmSize": "[parameters('vmSize')]"
         },
         "osProfile": {
-          "computerName": "[parameters('vmName')]",
+          "computerName": "[parameters('vmName1')]",
           "adminUsername": "[parameters('vmUserName')]",
           "adminPassword": "[parameters('vmPassword')]"
         },
@@ -283,35 +307,35 @@
               "lun": 0,
               "createOption": "attach",
               "managedDisk": {
-                "id": "[resourceId('Microsoft.Compute/disks/', concat(parameters('vmName'),'-shared'))]"
+                "id": "[resourceId('Microsoft.Compute/disks/', concat(parameters('vmName1'),'-shared'))]"
               }
             },
             {
               "lun": 1,
               "createOption": "attach",
               "managedDisk": {
-                "id": "[resourceId('Microsoft.Compute/disks/', concat(parameters('vmName'),'-sap'))]"
+                "id": "[resourceId('Microsoft.Compute/disks/', concat(parameters('vmName1'),'-sap'))]"
               }
             },
             {
               "lun": 2,
               "createOption": "attach",
               "managedDisk": {
-                "id": "[resourceId('Microsoft.Compute/disks/', concat(parameters('vmName'),'-backup1'))]"
+                "id": "[resourceId('Microsoft.Compute/disks/', concat(parameters('vmName1'),'-backup1'))]"
               }
             },
             {
               "lun": 3,
               "createOption": "attach",
               "managedDisk": {
-                "id": "[resourceId('Microsoft.Compute/disks/', concat(parameters('vmName'),'-data1'))]"
+                "id": "[resourceId('Microsoft.Compute/disks/', concat(parameters('vmName1'),'-data1'))]"
               }
             },
             {
               "lun": 4,
               "createOption": "attach",
               "managedDisk": {
-                "id": "[resourceId('Microsoft.Compute/disks/', concat(parameters('vmName'),'-data2'))]"
+                "id": "[resourceId('Microsoft.Compute/disks/', concat(parameters('vmName1'),'-data2'))]"
               }
             }
           ]
@@ -332,7 +356,7 @@
             "location": "[resourceGroup().location]",
             "apiVersion": "[variables('api-version-vm')]",
             "dependsOn": [
-              "[concat('Microsoft.Compute/virtualMachines/', parameters('vmName'))]"
+              "[concat('Microsoft.Compute/virtualMachines/', parameters('vmName1'))]"
             ],
             "properties": {
               "publisher": "Microsoft.Azure.Extensions",
@@ -341,9 +365,9 @@
               "autoUpgradeMinorVersion": true,
               "settings": {
                 "fileUris": [
-                  "https://raw.githubusercontent.com/AzureCAT-GSI/SAP-HANA-ARM/master/scripts/small.sh"
+                  "https://stagea3d54928db62458aad6.blob.core.windows.net/hanarg5-stageartifacts/scripts/small.sh"
                 ],
-                "commandToExecute": "[concat('sh small.sh ', parameters('customUri'), ' ' , parameters('vmUserName'), ' ', parameters('vmPassword'),' ', parameters('HANASID'), ' ', parameters('HANANUMBER'))]"
+                "commandToExecute": "[concat('sh small.sh ', parameters('customUri'), ' ' , parameters('vmUserName'), ' ', parameters('vmPassword'),' ', parameters('HANASID'), ' ', parameters('HANANUMBER'),' ',parameters('vmName1'),' ',parameters('vmName2'),' ',' ',parameters('StaticIP1'),' ',parameters('StaticIP2'),' ',parameters('HSRINST'))]"
               }
             }
           }

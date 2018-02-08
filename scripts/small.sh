@@ -4,6 +4,11 @@ HANAPWD=$3
 HANASID=$4
 HANANUMBER=$5
 vmSize=$6
+vmName=$7
+otherVMName=$8
+vmIPaddr=$9
+otherIPaddr=$10
+configHSR=$11
 
 
 #install hana prereqs
@@ -32,9 +37,7 @@ wget -O azcopy.tar.gz https://aka.ms/downloadazcopyprlinux
 tar -xf azcopy.tar.gz
 sudo ./install.sh
 
-sudo zypper se -t pattern
-sudo zypper in -t pattern sap-hana
-sudo saptune solution apply HANA
+sudo zypper in -t -y pattern sap-hana
 
 # step2
 echo $Uri >> /tmp/url.txt
@@ -131,7 +134,7 @@ myhost=`hostname`
 sedcmd="s/REPLACE-WITH-HOSTNAME/$myhost/g"
 sedcmd2="s/\/hana\/shared\/sapbits\/51052325/\/hana\/data\/sapbits\/51052325/g"
 sedcmd3="s/root_user=root/root_user=$HANAUSR/g"
-sedcmd4="s/AweS0me@PW/$HANAPWD/g"
+sedcmd4="s/root_password=AweS0me@PW/root_password=$HANAPWD/g"
 sedcmd5="s/sid=H10/sid=$HANASID/g"
 sedcmd6="s/number=00/number=$HANANUMBER/g"
 cat hdbinst.cfg | sed $sedcmd | sed $sedcmd2 | sed $sedcmd3 | sed $sedcmd4 | sed $sedcmd5 | sed $sedcmd6 > hdbinst-local.cfg
