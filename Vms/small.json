@@ -365,7 +365,7 @@
               "autoUpgradeMinorVersion": true,
               "settings": {
                 "fileUris": [
-                  "https://stagea3d54928db62458aad6.blob.core.windows.net/hanarg5-stageartifacts/scripts/small.sh"
+                  "https://raw.githubusercontent.com/rsponholtz/SAP-HANA-ARM/master/scripts/small.sh"
                 ],
                 "commandToExecute": "[concat('sh small.sh ', parameters('customUri'), ' ' , parameters('vmUserName'), ' ', parameters('vmPassword'),' ', parameters('HANASID'), ' ', parameters('HANANUMBER'),' ',parameters('vmName1'),' ',parameters('vmName2'),' ',' ',parameters('StaticIP1'),' ',parameters('StaticIP2'),' ',parameters('HSRINST'))]"
               }
