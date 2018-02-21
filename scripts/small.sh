@@ -1,31 +1,59 @@
 #!/bin/bash
 set -x
-Uri=$1
-HANAUSR=$2
-HANAPWD=$3
-HANASID=$4
-HANANUMBER=$5
-vmSize=$6
-vmName=$7
-OTHERVMNAME=$8
-vmIPaddr=$9
-otherIPaddr=$10
-configHSR=$11
-ISPRIMARY=$12
-REPOURI=$13
+# store arguments in a special array
+args=("$@")
+# get number of elements
+ELEMENTS=${#args[@]}
+
+# echo each element in array
+# for loop
+for (( i=0;i<$ELEMENTS;i++)); do
+    echo ${args[${i}]}
+done
+
+URI=$1
+shift
+HANAUSR=$1
+shift
+HANAPWD=$1
+shift
+HANASID=$1
+shift
+HANANUMBER=$1
+shift
+VMSIZE=$1
+shift
+VMNAME=$1
+shift
+OTHERVMNAME=$1
+shift
+VMIPADDR=$1
+shift
+OTHERIPADDR=$1
+shift
+CONFIGHSR=$1
+shift
+ISPRIMARY=$1
+shift
+REPOURI=$1
+
+HANAADMIN="$HANASID"adm
+echo "HANAADMIN:" $HANAADMIN
+
+HANASIDU="${HANASID^^}"
 
 echo "small.sh receiving:"
-echo "URI:" $Uri
+echo "URI:" $URI
 echo "HANAUSR:" $HANAUSR
 echo "HANAPWD:" $HANAPWD
 echo "HANASID:" $HANASID
 echo "HANANUMBER:" $HANANUMBER
-echo "VMSIZE:" $vmSize
-echo "VMNAME:" $vmName
+echo "VMSIZE:" $VMSIZE
+echo "VMNAME:" $VMNAME
 echo "OTHERVMNAME:" $OTHERVMNAME
-echo "VMIPADDR:" $vmIPaddr
-echo "OTHERIPADDR:" $otherIPaddr
-echo "CONFIGHSR:" $configHSR
+echo "VMIPADDR:" $VMIPADDR
+echo "OTHERIPADDR:" $OTHERIPADDR
+echo "CONFIGHSR:" $CONFIGHSR
 echo "ISPRIMARY:" $ISPRIMARY
 echo "REPOURI:" $REPOURI
 

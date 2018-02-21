@@ -385,7 +385,7 @@
                 "fileUris": [
                   "https://raw.githubusercontent.com/rsponholtz/SAP-HANA-ARM/master/scripts/small.sh"
                 ],
-                "commandToExecute": "[concat('sh small.sh ', parameters('customUri'), ' ' , parameters('vmUserName'), ' ', parameters('vmPassword'),' ', parameters('HANASID'), ' ', parameters('HANANUMBER'),' ',parameters('vmName1'),' ',parameters('vmName2'),' ',' ',parameters('StaticIP1'),' ',parameters('StaticIP2'),' ',parameters('HSRINST'),' ',parameters('ISPRIMARY'),' ',parameters('repoUri'))]"
+                "commandToExecute": "[concat('sh small.sh ', parameters('customUri'), ' ' , parameters('vmUserName'), ' ', parameters('vmPassword'),' ', parameters('HANASID'), ' ', parameters('HANANUMBER'),' ',parameters('vmSize'),' ',parameters('vmName1'),' ',parameters('vmName2'),' ',' ',parameters('StaticIP1'),' ',parameters('StaticIP2'),' ',parameters('HSRINST'),' ',parameters('ISPRIMARY'),' ',parameters('repoUri'))]"
               }
             }
           }
