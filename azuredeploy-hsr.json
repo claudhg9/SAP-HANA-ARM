@@ -163,6 +163,7 @@
   "variables": {
     "vmName1": "[toLower(parameters('vmName1'))]",
     "vmName2": "[toLower(parameters('vmName2'))]",
+    "repoUri": "https://raw.githubusercontent.com/rsponholtz/SAP-HANA-ARM/master",      
     "smallUri": "https://raw.githubusercontent.com/rsponholtz/SAP-HANA-ARM/master/Vms/small.json",
     "mediumUri": "https://raw.githubusercontent.com/rsponholtz/SAP-HANA-ARM/master/Vms/medium.json",
     "largeUri": "https://raw.githubusercontent.com/rsponholtz/SAP-HANA-ARM/master/Vms/large.json",
@@ -260,6 +261,15 @@
                     },
                     "StaticIP2":{
                         "value": "[parameters('StaticIP2')]"
+                    },
+                    "HSRINST":{
+                        "value": "yes"
+                    },
+                    "ISPRIMARY":{
+                        "value": "yes"
+                    },
+                    "repoUri": {
+                        "value": "[variables('repoUri')]"
                     }
                 }
             }
@@ -316,6 +326,15 @@
                     },
                     "StaticIP2":{
                         "value": "[parameters('StaticIP1')]"
+                    },
+                    "HSRINST":{
+                        "value": "yes"
+                    },
+                    "ISPRIMARY":{
+                        "value": "no"
+                    },
+                    "repoUri": {
+                        "value": "[variables('repoUri')]"
                     }
                 }
             }

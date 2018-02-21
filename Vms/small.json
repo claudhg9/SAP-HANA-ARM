@@ -105,6 +105,24 @@
             "yes",
             "no"
         ]
+        },
+        "ISPRIMARY": {
+          "type": "string",
+          "metadata": {
+            "description": "Is this the primary HANA instance"
+          },
+          "defaultValue": "yes",
+          "allowedValues": [
+            "yes",
+            "no"
+        ]
+        },
+        "repoUri": {
+          "type": "string",
+          "metadata": {
+            "description": "URI to scripts repo"
+          },
+          "defaultValue": "no"
         }                
     },
     "variables": {
@@ -367,7 +385,7 @@
                 "fileUris": [
                   "https://raw.githubusercontent.com/rsponholtz/SAP-HANA-ARM/master/scripts/small.sh"
                 ],
-                "commandToExecute": "[concat('sh small.sh ', parameters('customUri'), ' ' , parameters('vmUserName'), ' ', parameters('vmPassword'),' ', parameters('HANASID'), ' ', parameters('HANANUMBER'),' ',parameters('vmName1'),' ',parameters('vmName2'),' ',' ',parameters('StaticIP1'),' ',parameters('StaticIP2'),' ',parameters('HSRINST'))]"
+                "commandToExecute": "[concat('sh small.sh ', parameters('customUri'), ' ' , parameters('vmUserName'), ' ', parameters('vmPassword'),' ', parameters('HANASID'), ' ', parameters('HANANUMBER'),' ',parameters('vmName1'),' ',parameters('vmName2'),' ',' ',parameters('StaticIP1'),' ',parameters('StaticIP2'),' ',parameters('HSRINST'),' ',parameters('ISPRIMARY'),' ',parameters('repoUri'))]"
               }
             }
           }
