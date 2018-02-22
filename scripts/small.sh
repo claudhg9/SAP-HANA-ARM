@@ -211,27 +211,10 @@ $VMIPADDR $VMNAME
 $OTHERIPADDR $OTHERVMNAME
 EOF
 
-    cd ~/
-    rm -r -f .ssh
-    cat /dev/zero |ssh-keygen -q -N "" > /dev/null
-
-    sshpt --hosts hana2 -u $HANAUSR -p $HANAPWD --sudo "mkdir -p /root/.ssh"
-    sshpt --hosts hana2 -u $HANAUSR -p $HANAPWD --sudo -c ~/.ssh/id_rsa.pub -d /root/
-    sshpt --hosts hana2 -u $HANAUSR -p $HANAPWD --sudo "mkdir /root/.ssh"
-    sshpt --hosts hana2 -u $HANAUSR -p $HANAPWD --sudo "mv /root/id_rsa.pub /root/.ssh/authorized_keys"
-    sshpt --hosts hana2 -u $HANAUSR -p $HANAPWD --sudo "chmod 700 /root/.ssh"
-    sshpt --hosts hana2 -u $HANAUSR -p $HANAPWD --sudo "chown root:root /root/.ssh/authorized_keys"
-    sshpt --hosts hana2 -u $HANAUSR -p $HANAPWD --sudo "chmod 700 /root/.ssh/authorized_keys"
-
-#at this point, wait for the other machine to finish haha install
-
-    ./waitfor.sh root $OTHERVMNAME /tmp/hanacomplete.txt
-
-SYNCUSER="hsrsync"
-SYNCPASSWORD="Repl1cate"
+    SYNCUSER="hsrsync"
+    SYNCPASSWORD="Repl1cate"
     
-    
-    cat >hdbsetupsql <<EOF
+    cat >/tmp/hdbsetupsql <<EOF
 CREATE USER $SYNCUSER PASSWORD $SYNCPASSWORD;
 grant data admin to $SYNCUSER;
 ALTER USER $SYNCUSER DISABLE PASSWORD LIFETIME;
@@ -240,15 +223,64 @@ BACKUP DATA for $HANASID USING FILE ('backup');
 BACKUP DATA for SYSTEMDB USING FILE ('SYSTEMDB backup');
 EOF
 
-    cp ./hdbsetupsql /usr/sap/$HANASIDU/HDB$HANANUMBER/hdbsetupsql
-    chown $HANAADMIN:sapsys /usr/sap/$HANASIDU/HDB$HANANUMBER/hdbsetupsql
-    su - -c "hdbsql -u system -p $HANAPWD -d SYSTEMDB -I /usr/sap/$HANASIDU/HDB$HANANUMBER/hdbsetupsql" $HANAADMIN 
-
-    scp -o StrictHostKeyChecking=no hdbsetupsql root@$OTHERVMNAME:/root/hdbsetupsql
-    ssh -o StrictHostKeyChecking=no root@$OTHERVMNAME "cp /root/hdbsetupsql /usr/sap/$HANASIDU/HDB$HANANUMBER/hdbsetupsql"
-    ssh -o StrictHostKeyChecking=no root@$OTHERVMNAME "chown $HANAUSR:sapsys/usr/sap/$HANASIDU/HDB$HANANUMBER/hdbsetupsql"
-
-    ssh -o StrictHostKeyChecking=no root@$OTHERVMNAME "su - -c \"hdbsql -u system -p $HANAPWD -d SYSTEMDB -I /usr/sap/$HANASIDU/HDB$HANANUMBER/hdbsetupsql\" " $HANAADMIN 
+    chmod a+r /tmp/hdbsetupsql
+    su - -c "hdbsql -u system -p $HANAPWD -d SYSTEMDB -I /tmp/hdbsetupsql" $HANAADMIN 
 	
+    if [ "$ISPRIMARY" = "yes" ]; then
+	cd ~/
+	#rm -r -f .ssh
+	cat /dev/zero |ssh-keygen -q -N "" > /dev/null
+
+	sshpt --hosts hana2 -u $HANAUSR -p $HANAPWD --sudo "mkdir -p /root/.ssh"
+	sshpt --hosts hana2 -u $HANAUSR -p $HANAPWD --sudo -c ~/.ssh/id_rsa.pub -d /root/
+	sshpt --hosts hana2 -u $HANAUSR -p $HANAPWD --sudo "mkdir /root/.ssh"
+	sshpt --hosts hana2 -u $HANAUSR -p $HANAPWD --sudo "mv /root/id_rsa.pub /root/.ssh/authorized_keys"
+	sshpt --hosts hana2 -u $HANAUSR -p $HANAPWD --sudo "chmod 700 /root/.ssh"
+	sshpt --hosts hana2 -u $HANAUSR -p $HANAPWD --sudo "chown root:root /root/.ssh/authorized_keys"
+	sshpt --hosts hana2 -u $HANAUSR -p $HANAPWD --sudo "chmod 700 /root/.ssh/authorized_keys"
+
+#at this point, wait for the other machine to finish hana install
+
+	./waitfor.sh root $OTHERVMNAME /tmp/hanacomplete.txt
+
+	#now set the role on the primary
+	cat >/tmp/srenable <<EOF
+hdbnsutil -sr_enable --name=system0 	
+EOF
+	chmod a+r /tmp/srenable
+	su - $HANAUSR -c "bash /tmp/srenable"
+
+	touch /tmp/readyforsecondary.txt
+	./waitfor.sh root $OTHERVMNAME /tmp/readyforcerts.txt	
+	scp /usr/sap/$HANASIDU/SYS/global/security/rsecssfs/data/SSFS_$HANASIDU.DAT root@hana2:/root/SSFS_$HANASIDU.DAT
+	ssh -o StrictHostKeyChecking=no root@$OTHERVMNAME "cp /root/SSFS_$HANASIDU.DAT /usr/sap/$HANASIDU/SYS/global/security/rsecssfs/data/SSFS_$HANASIDU.DAT"
+	ssh -o StrictHostKeyChecking=no root@$OTHERVMNAME "chown $HANAADMIN:sapsys /usr/sap/$HANASIDU/SYS/global/security/rsecssfs/data/SSFS_$HANASIDU.DAT"
+
+	scp /usr/sap/$HANASIDU/SYS/global/security/rsecssfs/key/SSFS_$HANASIDU.KEY root@hana2:/root/SSFS_$HANASIDU.KEY
+	ssh -o StrictHostKeyChecking=no root@$OTHERVMNAME "cp /root/SSFS_$HANASIDU.DAT /usr/sap/$HANASIDU/SYS/global/security/rsecssfs/data/SSFS_$HANASIDU.KEY"
+	ssh -o StrictHostKeyChecking=no root@$OTHERVMNAME "chown $HANAADMIN:sapsys /usr/sap/$HANASIDU/SYS/global/security/rsecssfs/data/SSFS_$HANASIDU.KEY"
+
+	touch /tmp/dohsrjoin.txt
+    else
+	#do stuff on the secondary
+	./waitfor.sh root $OTHERVMNAME /tmp/readyforsecondary.txt	
+	cat >/tmp/stopsap <<EOF
+sapcontrol -nr 00 -function StopSystem HDB
+EOF
+	chmod a+r /tmp/stopsap
+	su - $HANAUSR -c "bash /tmp/stopsap"
+	touch /tmp/readyforcerts.txt
+
+	./waitfor.sh root $OTHERVMNAME /tmp/dohsrjoin.txt	
+	cat >/tmp/hsrjoin <<EOF
+HDB stop
+hdbnsutil -sr_register --name=system1 --remoteHost=$OTHERVMNAME --remoteInstance=00 --replicationMode=sync --operationMode=logreplay
+HDB start
+EOF
+
+	chmod a+rwx /tmp/hsrjoin
+	su - h10adm -c "bash /tmp/hsrjoin"
+	
+    fi
 fi
 #shutdown -r 1
