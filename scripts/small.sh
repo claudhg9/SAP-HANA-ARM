@@ -253,7 +253,7 @@ EOF
 hdbnsutil -sr_enable --name=system0 	
 EOF
 	chmod a+r /tmp/srenable
-	su - $HANAUSR -c "bash /tmp/srenable"
+	su - $HANAADMIN -c "bash /tmp/srenable"
 
 	touch /tmp/readyforsecondary.txt
 	./waitfor.sh root $OTHERVMNAME /tmp/readyforcerts.txt	
@@ -273,7 +273,7 @@ EOF
 sapcontrol -nr 00 -function StopSystem HDB
 EOF
 	chmod a+r /tmp/stopsap
-	su - $HANAUSR -c "bash /tmp/stopsap"
+	su - $HANAADMIN -c "bash /tmp/stopsap"
 	touch /tmp/readyforcerts.txt
 
 	./waitfor.sh root $OTHERVMNAME /tmp/dohsrjoin.txt	
