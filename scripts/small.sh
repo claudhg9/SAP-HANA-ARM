@@ -197,6 +197,7 @@ echo "install hana end" >> /tmp/parameter.txt
 echo "install hana end" >> /tmp/hanacomplete.txt
 #
 if [ "$CONFIGHSR" == "yes" ]; then
+    echo "hsr config start" >> /tmp/parameter.txt	    
     HANASIDU="${HANASID^^}"
     #we need to fix up the hosts.txt file
 
@@ -226,23 +227,26 @@ EOF
 
     chmod a+r /tmp/hdbsetupsql
     su - -c "hdbsql -u system -p $HANAPWD -d SYSTEMDB -I /tmp/hdbsetupsql" $HANAADMIN 
-	
+
+    #set up passwordless ssh on both sides
+    cd ~/
+    #rm -r -f .ssh
+    cat /dev/zero |ssh-keygen -q -N "" > /dev/null
+
+    sshpt --hosts hana2 -u $HANAUSR -p $HANAPWD --sudo "mkdir -p /root/.ssh"
+    sshpt --hosts hana2 -u $HANAUSR -p $HANAPWD --sudo -c ~/.ssh/id_rsa.pub -d /root/
+    sshpt --hosts hana2 -u $HANAUSR -p $HANAPWD --sudo "mkdir /root/.ssh"
+    sshpt --hosts hana2 -u $HANAUSR -p $HANAPWD --sudo "mv /root/id_rsa.pub /root/.ssh/authorized_keys"
+    sshpt --hosts hana2 -u $HANAUSR -p $HANAPWD --sudo "chmod 700 /root/.ssh"
+    sshpt --hosts hana2 -u $HANAUSR -p $HANAPWD --sudo "chown root:root /root/.ssh/authorized_keys"
+    sshpt --hosts hana2 -u $HANAUSR -p $HANAPWD --sudo "chmod 700 /root/.ssh/authorized_keys"
+    
+    touch /tmp/hanabackupdone.txt
+    ./waitfor.sh root $OTHERVMNAME /tmp/hanabackupdone.txt
+
+    
     if [ "$ISPRIMARY" = "yes" ]; then
-	cd ~/
-	#rm -r -f .ssh
-	cat /dev/zero |ssh-keygen -q -N "" > /dev/null
-
-	sshpt --hosts hana2 -u $HANAUSR -p $HANAPWD --sudo "mkdir -p /root/.ssh"
-	sshpt --hosts hana2 -u $HANAUSR -p $HANAPWD --sudo -c ~/.ssh/id_rsa.pub -d /root/
-	sshpt --hosts hana2 -u $HANAUSR -p $HANAPWD --sudo "mkdir /root/.ssh"
-	sshpt --hosts hana2 -u $HANAUSR -p $HANAPWD --sudo "mv /root/id_rsa.pub /root/.ssh/authorized_keys"
-	sshpt --hosts hana2 -u $HANAUSR -p $HANAPWD --sudo "chmod 700 /root/.ssh"
-	sshpt --hosts hana2 -u $HANAUSR -p $HANAPWD --sudo "chown root:root /root/.ssh/authorized_keys"
-	sshpt --hosts hana2 -u $HANAUSR -p $HANAPWD --sudo "chmod 700 /root/.ssh/authorized_keys"
-
-#at this point, wait for the other machine to finish hana install
-
-	./waitfor.sh root $OTHERVMNAME /tmp/hanacomplete.txt
+	echo "hsr primary start" >> /tmp/parameter.txt	
 
 	#now set the role on the primary
 	cat >/tmp/srenable <<EOF
@@ -258,8 +262,8 @@ EOF
 	ssh -o StrictHostKeyChecking=no root@$OTHERVMNAME "chown $HANAADMIN:sapsys /usr/sap/$HANASIDU/SYS/global/security/rsecssfs/data/SSFS_$HANASIDU.DAT"
 
 	scp /usr/sap/$HANASIDU/SYS/global/security/rsecssfs/key/SSFS_$HANASIDU.KEY root@hana2:/root/SSFS_$HANASIDU.KEY
-	ssh -o StrictHostKeyChecking=no root@$OTHERVMNAME "cp /root/SSFS_$HANASIDU.DAT /usr/sap/$HANASIDU/SYS/global/security/rsecssfs/data/SSFS_$HANASIDU.KEY"
-	ssh -o StrictHostKeyChecking=no root@$OTHERVMNAME "chown $HANAADMIN:sapsys /usr/sap/$HANASIDU/SYS/global/security/rsecssfs/data/SSFS_$HANASIDU.KEY"
+	ssh -o StrictHostKeyChecking=no root@$OTHERVMNAME "cp /root/SSFS_$HANASIDU.KEY /usr/sap/$HANASIDU/SYS/global/security/rsecssfs/key/SSFS_$HANASIDU.KEY"
+	ssh -o StrictHostKeyChecking=no root@$OTHERVMNAME "chown $HANAADMIN:sapsys /usr/sap/$HANASIDU/SYS/global/security/rsecssfs/key/SSFS_$HANASIDU.KEY"
 
 	touch /tmp/dohsrjoin.txt
     else
