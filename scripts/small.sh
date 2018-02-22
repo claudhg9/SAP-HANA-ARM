@@ -37,10 +37,12 @@ ISPRIMARY=$1
 shift
 REPOURI=$1
 
-HANAADMIN="$HANASID"adm
-echo "HANAADMIN:" $HANAADMIN
 
 HANASIDU="${HANASID^^}"
+HANASIDL="${HANASID,,}"
+
+HANAADMIN="$HANASIDL"adm
+echo "HANAADMIN:" $HANAADMIN
 
 echo "small.sh receiving:"
 echo "URI:" $URI
@@ -86,7 +88,7 @@ sudo ./install.sh
 sudo zypper in -t -y pattern sap-hana
 
 # step2
-echo $Uri >> /tmp/url.txt
+echo $URI >> /tmp/url.txt
 
 cp -f /etc/waagent.conf /etc/waagent.conf.orig
 sedcmd="s/ResourceDisk.EnableSwap=n/ResourceDisk.EnableSwap=y/g"
@@ -154,11 +156,11 @@ fi
 #!/bin/bash
 cd /hana/data/sapbits
 echo "hana download start" >> /tmp/parameter.txt
-/usr/bin/wget --quiet $Uri/SapBits/md5sums
-/usr/bin/wget --quiet $Uri/SapBits/51052325_part1.exe
-/usr/bin/wget --quiet $Uri/SapBits/51052325_part2.rar
-/usr/bin/wget --quiet $Uri/SapBits/51052325_part3.rar
-/usr/bin/wget --quiet $Uri/SapBits/51052325_part4.rar
+/usr/bin/wget --quiet $URI/SapBits/md5sums
+/usr/bin/wget --quiet $URI/SapBits/51052325_part1.exe
+/usr/bin/wget --quiet $URI/SapBits/51052325_part2.rar
+/usr/bin/wget --quiet $URI/SapBits/51052325_part3.rar
+/usr/bin/wget --quiet $URI/SapBits/51052325_part4.rar
 /usr/bin/wget --quiet "https://raw.githubusercontent.com/AzureCAT-GSI/SAP-HANA-ARM/master/hdbinst.cfg"
 echo "hana download end" >> /tmp/parameter.txt
 
@@ -193,7 +195,7 @@ cd /hana/data/sapbits/51052325/DATA_UNITS/HDB_LCM_LINUX_X86_64
 echo "install hana end" >> /tmp/parameter.txt
 echo "install hana end" >> /tmp/hanacomplete.txt
 #
-if [ "$configHSR" == "yes" ]; then
+if [ "$CONFIGHSR" == "yes" ]; then
     HANASIDU="${HANASID^^}"
     #we need to fix up the hosts.txt file
 
@@ -205,9 +207,9 @@ if [ "$configHSR" == "yes" ]; then
     chmod u+x waitfor.sh
     
     cat >>/etc/hosts <<EOF
-    $VMIPADDR $VMNAME
-    $OTHERIPADDR $OTHERVMNAME
-    EOF
+$VMIPADDR $VMNAME
+$OTHERIPADDR $OTHERVMNAME
+EOF
 
     cd ~/
     rm -r -f .ssh
@@ -224,6 +226,10 @@ if [ "$configHSR" == "yes" ]; then
 #at this point, wait for the other machine to finish haha install
 
     ./waitfor.sh root $OTHERVMNAME /tmp/hanacomplete.txt
+
+SYNCUSER="hsrsync"
+SYNCPASSWORD="Repl1cate"
+    
     
     cat >hdbsetupsql <<EOF
 CREATE USER $SYNCUSER PASSWORD $SYNCPASSWORD;
@@ -234,16 +240,15 @@ BACKUP DATA for $HANASID USING FILE ('backup');
 BACKUP DATA for SYSTEMDB USING FILE ('SYSTEMDB backup');
 EOF
 
-	cp ./hdbsetupsql /usr/sap/$HANASIDU/HDB$HANANUMBER/hdbsetupsql
-	chown $HANAADMIN:sapsys /usr/sap/$HANASIDU/HDB$HANANUMBER/hdbsetupsql
-	su - -c "hdbsql -u system -p $HANAPWD -d SYSTEMDB -I /usr/sap/$HANASIDU/HDB$HANANUMBER/hdbsetupsql" $HANAADMIN 
+    cp ./hdbsetupsql /usr/sap/$HANASIDU/HDB$HANANUMBER/hdbsetupsql
+    chown $HANAADMIN:sapsys /usr/sap/$HANASIDU/HDB$HANANUMBER/hdbsetupsql
+    su - -c "hdbsql -u system -p $HANAPWD -d SYSTEMDB -I /usr/sap/$HANASIDU/HDB$HANANUMBER/hdbsetupsql" $HANAADMIN 
 
-	scp -o StrictHostKeyChecking=no hdbsetupsql root@$OTHERVMNAME:/root/hdbsetupsql
-	ssh -o StrictHostKeyChecking=no root@$OTHERVMNAME "cp /root/hdbsetupsql /usr/sap/$HANASIDU/HDB$HANANUMBER/hdbsetupsql"
-	ssh -o StrictHostKeyChecking=no root@$OTHERVMNAME "chown $HANAUSR:sapsys/usr/sap/$HANASIDU/HDB$HANANUMBER/hdbsetupsql"
+    scp -o StrictHostKeyChecking=no hdbsetupsql root@$OTHERVMNAME:/root/hdbsetupsql
+    ssh -o StrictHostKeyChecking=no root@$OTHERVMNAME "cp /root/hdbsetupsql /usr/sap/$HANASIDU/HDB$HANANUMBER/hdbsetupsql"
+    ssh -o StrictHostKeyChecking=no root@$OTHERVMNAME "chown $HANAUSR:sapsys/usr/sap/$HANASIDU/HDB$HANANUMBER/hdbsetupsql"
 
-	ssh -o StrictHostKeyChecking=no root@$OTHERVMNAME "su - -c \"hdbsql -u system -p $HANAPWD -d SYSTEMDB -I /usr/sap/$HANASIDU/HDB$HANANUMBER/hdbsetupsql\" " $HANAADMIN 
+    ssh -o StrictHostKeyChecking=no root@$OTHERVMNAME "su - -c \"hdbsql -u system -p $HANAPWD -d SYSTEMDB -I /usr/sap/$HANASIDU/HDB$HANANUMBER/hdbsetupsql\" " $HANAADMIN 
 	
-    fi
 fi
 #shutdown -r 1
