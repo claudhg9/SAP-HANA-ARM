@@ -233,13 +233,13 @@ EOF
     #rm -r -f .ssh
     cat /dev/zero |ssh-keygen -q -N "" > /dev/null
 
-    sshpt --hosts hana2 -u $HANAUSR -p $HANAPWD --sudo "mkdir -p /root/.ssh"
-    sshpt --hosts hana2 -u $HANAUSR -p $HANAPWD --sudo -c ~/.ssh/id_rsa.pub -d /root/
-    sshpt --hosts hana2 -u $HANAUSR -p $HANAPWD --sudo "mkdir /root/.ssh"
-    sshpt --hosts hana2 -u $HANAUSR -p $HANAPWD --sudo "mv /root/id_rsa.pub /root/.ssh/authorized_keys"
-    sshpt --hosts hana2 -u $HANAUSR -p $HANAPWD --sudo "chmod 700 /root/.ssh"
-    sshpt --hosts hana2 -u $HANAUSR -p $HANAPWD --sudo "chown root:root /root/.ssh/authorized_keys"
-    sshpt --hosts hana2 -u $HANAUSR -p $HANAPWD --sudo "chmod 700 /root/.ssh/authorized_keys"
+    sshpt --hosts $OTHERVMNAME -u $HANAUSR -p $HANAPWD --sudo "mkdir -p /root/.ssh"
+    sshpt --hosts $OTHERVMNAME -u $HANAUSR -p $HANAPWD --sudo -c ~/.ssh/id_rsa.pub -d /root/
+    sshpt --hosts $OTHERVMNAME -u $HANAUSR -p $HANAPWD --sudo "mkdir /root/.ssh"
+    sshpt --hosts $OTHERVMNAME -u $HANAUSR -p $HANAPWD --sudo "mv /root/id_rsa.pub /root/.ssh/authorized_keys"
+    sshpt --hosts $OTHERVMNAME -u $HANAUSR -p $HANAPWD --sudo "chmod 700 /root/.ssh"
+    sshpt --hosts $OTHERVMNAME -u $HANAUSR -p $HANAPWD --sudo "chown root:root /root/.ssh/authorized_keys"
+    sshpt --hosts $OTHERVMNAME -u $HANAUSR -p $HANAPWD --sudo "chmod 700 /root/.ssh/authorized_keys"
     
     touch /tmp/hanabackupdone.txt
     ./waitfor.sh root $OTHERVMNAME /tmp/hanabackupdone.txt
