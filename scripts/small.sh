@@ -269,18 +269,13 @@ EOF
     else
 	#do stuff on the secondary
 	./waitfor.sh root $OTHERVMNAME /tmp/readyforsecondary.txt	
-	cat >/tmp/stopsap <<EOF
-sapcontrol -nr 00 -function StopSystem HDB
-EOF
-	chmod a+r /tmp/stopsap
-	su - $HANAADMIN -c "bash /tmp/stopsap"
-	touch /tmp/readyforcerts.txt
 
+	touch /tmp/readyforcerts.txt
 	./waitfor.sh root $OTHERVMNAME /tmp/dohsrjoin.txt	
 	cat >/tmp/hsrjoin <<EOF
-HDB stop
-hdbnsutil -sr_register --name=system1 --remoteHost=$OTHERVMNAME --remoteInstance=00 --replicationMode=sync --operationMode=logreplay
-HDB start
+sapcontrol -nr $HANANUMBER function StopSystem HDB
+hdbnsutil -sr_register --name=system1 --remoteHost=$OTHERVMNAME --remoteInstance=$HANANUMBER --replicationMode=sync --operationMode=logreplay
+sapcontrol -nr $HANANUMBER function StartSystem HDB
 EOF
 
 	chmod a+rwx /tmp/hsrjoin
