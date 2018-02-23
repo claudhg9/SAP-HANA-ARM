@@ -273,9 +273,9 @@ EOF
 	touch /tmp/readyforcerts.txt
 	./waitfor.sh root $OTHERVMNAME /tmp/dohsrjoin.txt	
 	cat >/tmp/hsrjoin <<EOF
-sapcontrol -nr $HANANUMBER function StopSystem HDB
+sapcontrol -nr $HANANUMBER -function StopSystem HDB
 hdbnsutil -sr_register --name=system1 --remoteHost=$OTHERVMNAME --remoteInstance=$HANANUMBER --replicationMode=sync --operationMode=logreplay
-sapcontrol -nr $HANANUMBER function StartSystem HDB
+sapcontrol -nr $HANANUMBER -function StartSystem HDB
 EOF
 
 	chmod a+rwx /tmp/hsrjoin
