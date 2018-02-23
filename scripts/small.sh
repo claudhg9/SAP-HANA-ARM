@@ -274,11 +274,12 @@ EOF
 	./waitfor.sh root $OTHERVMNAME /tmp/dohsrjoin.txt	
 	cat >/tmp/hsrjoin <<EOF
 sapcontrol -nr $HANANUMBER -function StopSystem HDB
+sapcontrol -nr $HANANUMBER -function WaitforStopped 600 2
 hdbnsutil -sr_register --name=system1 --remoteHost=$OTHERVMNAME --remoteInstance=$HANANUMBER --replicationMode=sync --operationMode=logreplay
 sapcontrol -nr $HANANUMBER -function StartSystem HDB
 EOF
 
-	chmod a+rwx /tmp/hsrjoin
+	chmod a+r /tmp/hsrjoin
 	su - $HANAADMIN -c "bash /tmp/hsrjoin"
     fi
 fi
